@@ -5,8 +5,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Column;
+import javax.validation.constraints.*;
 import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -16,11 +19,16 @@ public class Todo {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Integer id;
 
+    @NotNull
     private String title;
 
     @Column(name = "content", length = 500)
+    @NotNull
+    @Size(max=500)
     private String content;
 
+    @NotNull
+    @DateTimeFormat
     private Date dueDate;
 
     public Integer getId() {

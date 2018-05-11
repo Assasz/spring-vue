@@ -15,7 +15,7 @@ const Home = {
             $('#' + target).modal();
 
             if(todoId !== null){
-                $('#' + target).find('form').attr('data-id', todoId);
+                $('#' + target).attr('data-id', todoId);
 
                 if(target === 'edit_modal'){
                     $.ajax({
@@ -33,30 +33,74 @@ const Home = {
 
         },
         editTodo: function(event) {
-            var todoId = $('#edit_form').data('id'),
-                data = {
-                    title: $('#edit_title').val(),
-                    content: $('#edit_content').val(),
-                    dueDate: $('#edit_due_date').val(),
-                };
+            $("#edit_form").validate({
+                rules: {
+                    title: {
+                        required: true,
+                        normalizer: function(value) {
+                            return $.trim(value);
+                        }
+                    },
+                    content: {
+                        required: true,
+                        maxlength: 500,
+                        normalizer: function(value) {
+                            return $.trim(value);
+                        }
+                    },
+                    dueDate: {
+                        required: true,
+                        date: true,
+                        normalizer: function(value) {
+                            return $.trim(value);
+                        }
+                    }
+                },
+                onkeyup: false,
+                errorClass: "is-invalid",
+                validClass: "is-valid",
+                errorElement: "div",
+                errorPlacement: function(error, element) {
+                    error.appendTo( element.parent() );
+                }
+            });
 
-            $.ajax({
-                method: 'put',
-                url: "http://localhost:8080/todo/" + todoId,
-                data: JSON.stringify(data),
-                contentType: "application/json"
-            }).then(function(data, status, jqxhr) {
-                var dueDate = moment(String(data.dueDate)).endOf('minutes').fromNow() + ' - ' + moment(String(data.dueDate)).format('MMMM Do YYYY, hh:mm');
+            if ($("#edit_form").valid()) {
+                var todoId = $('#edit_modal').data('id'),
+                    data = {
+                        title: $('#edit_title').val(),
+                        content: $('#edit_content').val(),
+                        dueDate: $('#edit_due_date').val(),
+                    };
 
-                $('#' + todoId + ' #todo_title').html(data.title);
-                $('#' + todoId + ' #todo_due_date').html(dueDate);
-                $('#' + todoId + ' #todo_content').html(data.content);
+                $.ajax({
+                    method: 'put',
+                    url: "http://localhost:8080/todo/" + todoId,
+                    data: JSON.stringify(data),
+                    contentType: "application/json"
+                }).then(function(data, status, jqxhr) {
+                    var dueDate = moment(String(data.dueDate)).endOf('minutes').fromNow() + ' - ' + moment(String(data.dueDate)).format('MMMM Do YYYY, hh:mm');
 
-                $('#edit_modal').modal('hide');
-            });    
+                    $('#' + todoId + ' #todo_title').html(data.title);
+                    $('#' + todoId + ' #todo_due_date').html(dueDate);
+                    $('#' + todoId + ' #todo_content').html(data.content);
+
+                    $('#edit_modal').modal('hide');
+                });   
+            } 
         },
         deleteTodo: function(event) {
-            
+            var todoId = $('#delete_modal').data('id');
+
+            $.ajax({
+                method: 'delete',
+                url: "http://localhost:8080/todo/" + todoId,
+            }).then(function(data, status, jqxhr) {
+                if(data){
+                    $('#' + todoId).remove();
+                    $('#delete_modal').modal('hide');
+                }
+            });   
         }
     },
     mounted() {
@@ -129,7 +173,7 @@ const Home = {
                                 </form>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" v-on:click="addTodo">Save changes</button>
+                                <button type="button" class="btn btn-primary" v-on:click="addTodo">Create</button>
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                             </div>
                         </div>
