@@ -8,11 +8,12 @@ const Home = {
     methods: {
         diffDates: function(value, type = 'minutes') {
             var now = new Date().toString();
-
             return moment(String(value)).diff(moment(now), type);
         },
         toggleModal: function(target, event, todoId = null) {
             event.preventDefault();
+
+            $('.form-control').removeClass('is-valid is-invalid');
             $('#' + target).modal();
 
             if(todoId !== null){
@@ -35,6 +36,7 @@ const Home = {
                 rules: {
                     title: {
                         required: true,
+                        maxlength: 255,
                         normalizer: function(value) {
                             return $.trim(value);
                         }
@@ -64,8 +66,6 @@ const Home = {
             };
         },
         addTodo: function() {
-            $("#create_form").validate(this.getValidationOptions());
-
             if ($("#create_form").valid()) {
                 var self = this,
                     data = {
@@ -86,8 +86,6 @@ const Home = {
             } 
         },
         editTodo: function() {
-            $("#edit_form").validate(this.getValidationOptions());
-
             if ($("#edit_form").valid()) {
                 var self = this,
                     data = {
@@ -154,6 +152,9 @@ const Home = {
         }).then(function(data, status, jqxhr) {
             self.todos = data;
         });
+
+        $("#create_form").validate(this.getValidationOptions());
+        $("#edit_form").validate(this.getValidationOptions());
     },
     filters: {
         formatDate: function(value) {
