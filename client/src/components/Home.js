@@ -1,7 +1,8 @@
 const Home = {
     data: function() {
         return { 
-            todos: []
+            todos: [],
+            currentTodo: null
         }
     },
     methods: {
@@ -15,12 +16,12 @@ const Home = {
             $('#' + target).modal();
 
             if(todoId !== null){
-                $('#' + target).attr('data-id', todoId);
+                this.currentTodo = todoId;
 
                 if(target === 'edit_modal'){
                     $.ajax({
                         method: 'get',
-                        url: "http://localhost:8080/todo/" + todoId
+                        url: "http://localhost:8080/todo/" + this.currentTodo
                     }).then(function(data, status, jqxhr) {
                         $('#edit_title').val(data.title);
                         $('#edit_content').val(data.content);
@@ -29,11 +30,8 @@ const Home = {
                 }
             }
         },
-        addTodo: function(event) {
-
-        },
-        editTodo: function(event) {
-            $("#edit_form").validate({
+        getValidationOptions: function() {
+            return {
                 rules: {
                     title: {
                         required: true,
@@ -63,43 +61,87 @@ const Home = {
                 errorPlacement: function(error, element) {
                     error.appendTo( element.parent() );
                 }
-            });
+            };
+        },
+        addTodo: function() {
+            $("#create_form").validate(this.getValidationOptions());
+
+            if ($("#create_form").valid()) {
+                var self = this,
+                    data = {
+                        title: $('#title').val(),
+                        content: $('#content').val(),
+                        dueDate: $('#due_date').val(),
+                    };
+
+                $.ajax({
+                    method: 'post',
+                    url: "http://localhost:8080/todo",
+                    data: JSON.stringify(data),
+                    contentType: "application/json"
+                }).then(function(data, status, jqxhr) {
+                    self.todos.unshift(data);
+                    $('#create_modal').modal('hide');
+                });   
+            } 
+        },
+        editTodo: function() {
+            $("#edit_form").validate(this.getValidationOptions());
 
             if ($("#edit_form").valid()) {
-                var todoId = $('#edit_modal').data('id'),
+                var self = this,
                     data = {
                         title: $('#edit_title').val(),
                         content: $('#edit_content').val(),
-                        dueDate: $('#edit_due_date').val(),
+                        dueDate: $('#edit_due_date').val()
                     };
 
                 $.ajax({
                     method: 'put',
-                    url: "http://localhost:8080/todo/" + todoId,
+                    url: "http://localhost:8080/todo/" + this.currentTodo,
                     data: JSON.stringify(data),
                     contentType: "application/json"
                 }).then(function(data, status, jqxhr) {
                     var dueDate = moment(String(data.dueDate)).endOf('minutes').fromNow() + ' - ' + moment(String(data.dueDate)).format('MMMM Do YYYY, hh:mm');
 
-                    $('#' + todoId + ' #todo_title').html(data.title);
-                    $('#' + todoId + ' #todo_due_date').html(dueDate);
-                    $('#' + todoId + ' #todo_content').html(data.content);
+                    $('#' + self.currentTodo + ' #todo_title').html(data.title);
+                    $('#' + self.currentTodo + ' #todo_due_date').html(dueDate);
+                    $('#' + self.currentTodo + ' #todo_content').html(data.content);
 
                     $('#edit_modal').modal('hide');
                 });   
             } 
         },
-        deleteTodo: function(event) {
-            var todoId = $('#delete_modal').data('id');
+        deleteTodo: function() {
+            var self = this;
 
             $.ajax({
                 method: 'delete',
-                url: "http://localhost:8080/todo/" + todoId,
+                url: "http://localhost:8080/todo/" + this.currentTodo,
             }).then(function(data, status, jqxhr) {
                 if(data){
-                    $('#' + todoId).remove();
+                    var index = self.todos.findIndex(function(element) {
+                        return element.id == self.currentTodo;
+                    });
+
+                    self.todos.splice(index, 1);
                     $('#delete_modal').modal('hide');
                 }
+            });   
+        },
+        searchTodos: function() {
+            var self = this,
+                data = {
+                    searchTerm: $('#search').val()
+                };
+
+            $.ajax({
+                method: 'post',
+                url: "http://localhost:8080/todo/search",
+                data: JSON.stringify(data),
+                contentType: "application/json"
+            }).then(function(data, status, jqxhr) {
+                self.todos = data;
             });   
         }
     },
@@ -126,7 +168,7 @@ const Home = {
             <div class="row mt-4">
                 <div class="col-lg-6">
                     <label for="search" class="offscreen">Search todos</label>
-                    <input type="text" class="form-control" id="search" name="search" placeholder="Search todos">
+                    <input type="text" class="form-control" id="search" name="search" placeholder="Search todos" v-on:keyup="searchTodos">
                 </div>
                 <div class="col-lg-6 mt-4 mt-lg-0">
                     <button type="button" class="btn btn-primary" v-on:click="toggleModal('create_modal', $event)">Add todo</a>

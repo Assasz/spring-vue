@@ -22,7 +22,7 @@ public class Todo {
     @NotNull
     private String title;
 
-    @Column(name = "content", length = 500)
+    @Column(length = 500)
     @NotNull
     @Size(max=500)
     private String content;
