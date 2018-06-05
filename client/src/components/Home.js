@@ -22,7 +22,7 @@ const Home = {
                 if(target === 'edit_modal'){
                     $.ajax({
                         method: 'get',
-                        url: "http://localhost:8080/todo/" + this.currentTodo
+                        url: apiUrl + '/' + this.currentTodo
                     }).then(function(data, status, jqxhr) {
                         $('#edit_title').val(data.title);
                         $('#edit_content').val(data.content);
@@ -76,7 +76,7 @@ const Home = {
 
                 $.ajax({
                     method: 'post',
-                    url: "http://localhost:8080/todo",
+                    url: apiUrl,
                     data: JSON.stringify(data),
                     contentType: "application/json"
                 }).then(function(data, status, jqxhr) {
@@ -96,7 +96,7 @@ const Home = {
 
                 $.ajax({
                     method: 'put',
-                    url: "http://localhost:8080/todo/" + this.currentTodo,
+                    url: apiUrl + '/' + this.currentTodo,
                     data: JSON.stringify(data),
                     contentType: "application/json"
                 }).then(function(data, status, jqxhr) {
@@ -115,7 +115,7 @@ const Home = {
 
             $.ajax({
                 method: 'delete',
-                url: "http://localhost:8080/todo/" + this.currentTodo,
+                url: apiUrl + '/' + this.currentTodo,
             }).then(function(data, status, jqxhr) {
                 if(data){
                     var index = self.todos.findIndex(function(element) {
@@ -135,7 +135,7 @@ const Home = {
 
             $.ajax({
                 method: 'post',
-                url: "http://localhost:8080/todo/search",
+                url: apiUrl + '/search',
                 data: JSON.stringify(data),
                 contentType: "application/json"
             }).then(function(data, status, jqxhr) {
@@ -148,7 +148,7 @@ const Home = {
 
         $.ajax({
             method: 'get',
-            url: "http://localhost:8080/todo"
+            url: apiUrl
         }).then(function(data, status, jqxhr) {
             self.todos = data;
         });
